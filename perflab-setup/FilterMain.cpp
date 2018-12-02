@@ -15,7 +15,7 @@ using namespace std;
 Filter * readFilter(string filename);
 double applyFilter(Filter *filter, cs1300bmp *input, cs1300bmp *output);
 
-int
+  int
 main(int argc, char **argv)
 {
 
@@ -65,7 +65,7 @@ main(int argc, char **argv)
 
 }
 
-struct Filter *
+  struct Filter *
 readFilter(string filename)
 {
   ifstream input(filename.c_str());
@@ -79,9 +79,9 @@ readFilter(string filename)
     filter -> setDivisor(div);
     for (int i=0; i < size; i++) {
       for (int j=0; j < size; j++) {
-	int value;
-	input >> value;
-	filter -> set(i,j,value);
+        int value;
+        input >> value;
+        filter -> set(i,j,value);
       }
     }
     return filter;
@@ -91,37 +91,37 @@ readFilter(string filename)
 #if defined(__arm__)
 static inline unsigned int get_cyclecount (void)
 {
- unsigned int value;
- // Read CCNT Register
- asm volatile ("MRC p15, 0, %0, c9, c13, 0\t\n": "=r"(value)); 
- return value;
+  unsigned int value;
+  // Read CCNT Register
+  asm volatile ("MRC p15, 0, %0, c9, c13, 0\t\n": "=r"(value)); 
+  return value;
 }
 
 static inline void init_perfcounters (int32_t do_reset, int32_t enable_divider)
 {
- // in general enable all counters (including cycle counter)
- int32_t value = 1;
+  // in general enable all counters (including cycle counter)
+  int32_t value = 1;
 
- // peform reset: 
- if (do_reset)
- {
-   value |= 2;     // reset all counters to zero.
-   value |= 4;     // reset cycle counter to zero.
- }
+  // peform reset: 
+  if (do_reset)
+  {
+    value |= 2;     // reset all counters to zero.
+    value |= 4;     // reset cycle counter to zero.
+  }
 
- if (enable_divider)
-   value |= 8;     // enable "by 64" divider for CCNT.
+  if (enable_divider)
+    value |= 8;     // enable "by 64" divider for CCNT.
 
- value |= 16;
+  value |= 16;
 
- // program the performance-counter control-register:
- asm volatile ("MCR p15, 0, %0, c9, c12, 0\t\n" :: "r"(value)); 
+  // program the performance-counter control-register:
+  asm volatile ("MCR p15, 0, %0, c9, c12, 0\t\n" :: "r"(value)); 
 
- // enable all counters: 
- asm volatile ("MCR p15, 0, %0, c9, c12, 1\t\n" :: "r"(0x8000000f)); 
+  // enable all counters: 
+  asm volatile ("MCR p15, 0, %0, c9, c12, 1\t\n" :: "r"(0x8000000f)); 
 
- // clear overflows:
- asm volatile ("MCR p15, 0, %0, c9, c12, 3\t\n" :: "r"(0x8000000f));
+  // clear overflows:
+  asm volatile ("MCR p15, 0, %0, c9, c12, 3\t\n" :: "r"(0x8000000f));
 }
 
 
@@ -130,65 +130,72 @@ static inline void init_perfcounters (int32_t do_reset, int32_t enable_divider)
 
 
 
-double
+  double
 applyFilter(struct Filter *filter, cs1300bmp *input, cs1300bmp *output)
 {
-  #if defined(__arm__)
+#if defined(__arm__)
   init_perfcounters (1, 1);
-  #endif
+#endif
 
   long long cycStart, cycStop;
   double start,stop;
-  #if defined(__arm__)
+#if defined(__arm__)
   cycStart = get_cyclecount();
-  #else
+#else
   cycStart = rdtscll();
-  #endif
+#endif
   output -> width = input -> width;
   output -> height = input -> height;
 
-
-  for(int col = 1; col < (input -> width) - 1; col = col + 1) {
-    for(int row = 1; row < (input -> height) - 1 ; row = row + 1) {
-      for(int plane = 0; plane < 3; plane++) {
-
-	int t = 0;
-	output -> color[plane][row][col] = 0;
-
-	for (int j = 0; j < filter -> getSize(); j++) {
-	  for (int i = 0; i < filter -> getSize(); i++) {	
-	    output -> color[plane][row][col]
-	      = output -> color[plane][row][col]
-	      + (input -> color[plane][row + i - 1][col + j - 1] 
-		 * filter -> get(i, j) );
-	  }
-	}
-	
-	output -> color[plane][row][col] = 	
-	  output -> color[plane][row][col] / filter -> getDivisor();
-
-	if ( output -> color[plane][row][col]  < 0 ) {
-	  output -> color[plane][row][col] = 0;
-	}
-
-	if ( output -> color[plane][row][col]  > 255 ) { 
-	  output -> color[plane][row][col] = 255;
-	}
+  //call input -> width and input -> height once
+  for(int col = 1; col < (input -> width) - 1; col = col + 1) 
+  {
+    for(int row = 1; row < (input -> height) - 1 ; row = row + 1) 
+    {
+      for(int plane = 0; plane < 3; plane++) 
+      {
+        //move to outside loop
+        int t = 0;
+        output -> color[plane][row][col] = 0;
+        //change get_size to actual size of filter, they should all be same
+        //unroll for loops below?
+        for (int j = 0; j < 3; j++) 
+        {
+          for (int i = 0; i < 3; i++) 
+          {	
+            output -> color[plane][row][col]
+              = output -> color[plane][row][col]
+              + (input -> color[plane][row + i - 1][col + j - 1] 
+                  * filter -> get(i, j) );
+          }
+        }
+        //if divisor is one then dont do the division by the divisor
+        //also move filter -> getDivisor out of loops
+        output -> color[plane][row][col] = 	
+          output -> color[plane][row][col] / filter -> getDivisor();
+        if ( output -> color[plane][row][col]  < 0 ) 
+        {
+          output -> color[plane][row][col] = 0;
+        }
+        if ( output -> color[plane][row][col]  > 255 ) 
+        { 
+          output -> color[plane][row][col] = 255;
+        }
       }
     }
   }
-  #if defined(__arm__)
+#if defined(__arm__)
   cycStop = get_cyclecount();
-  #else
+#else
   cycStop = rdtscll();
-  #endif
+#endif
 
   double diff = cycStop-cycStart;
-  #if defined(__arm__)
+#if defined(__arm__)
   diff = diff * 64;
-  #endif
+#endif
   double diffPerPixel = diff / (output -> width * output -> height);
   fprintf(stderr, "Took %f cycles to process, or %f cycles per pixel\n",
-	  diff, diff / (output -> width * output -> height));
+      diff, diff / (output -> width * output -> height));
   return diffPerPixel;
 }
