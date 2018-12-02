@@ -161,18 +161,32 @@ applyFilter(struct Filter *filter, cs1300bmp *input, cs1300bmp *output)
       {
         //move to outside loop
         //int t = 0;
-        output -> color[plane][row][col] = 0;
+        
+        //memory aliasing
+        //output -> color[plane][row][col] = 0;
+        int val = 0;
+
         //change get_size to actual size of filter, they should all be same
         //unroll for loops below?
         for (int j = 0; j < 3; j++) 
         {
-          for (int i = 0; i < 3; i++) 
-          {	
-            output -> color[plane][row][col]
-              = output -> color[plane][row][col]
+          //for (int i = 0; i < 3; i++) 
+          //{	
+            //output -> color[plane][row][col]
+            int i = 0;
+            val = output -> color[plane][row][col]
               + (input -> color[plane][row + i - 1][col + j - 1] 
                   * filter -> get(i, j) );
-          }
+            output -> color[plane][row][col] = val;
+            val = output -> color[plane][row][col]
+              + (input -> color[plane][row + i][col + j - 1] 
+                  * filter -> get(i + 1, j) );
+            output -> color[plane][row][col] = val;
+            val = output -> color[plane][row][col]
+              + (input -> color[plane][row + i + 1][col + j - 1] 
+                  * filter -> get(i + 2, j) );
+            output -> color[plane][row][col] = val;
+          //}
         }
         //if divisor is one then dont do the division by the divisor
         //also move filter -> getDivisor out of loops
