@@ -164,30 +164,40 @@ applyFilter(struct Filter *filter, cs1300bmp *input, cs1300bmp *output)
         
         //memory aliasing
         //output -> color[plane][row][col] = 0;
-        int val = 0;
 
-        //change get_size to actual size of filter, they should all be same
+        //chane get_size to actual size of filter, they should all be same
         //unroll for loops below?
-        for (int j = 0; j < 3; j++) 
-        {
+        //for (int j = 0; j < 3; j++) 
+        //{
           //for (int i = 0; i < 3; i++) 
           //{	
-            //output -> color[plane][row][col]
+            int j = 0;
             int i = 0;
-            val = output -> color[plane][row][col]
-              + (input -> color[plane][row + i - 1][col + j - 1] 
+            //int val = output -> color[plane][row][col];
+            int val = 0;
+            val += (input -> color[plane][row + i - 1][col + j - 1] 
                   * filter -> get(i, j) );
-            output -> color[plane][row][col] = val;
-            val = output -> color[plane][row][col]
-              + (input -> color[plane][row + i][col + j - 1] 
+            val += (input -> color[plane][row + i][col + j - 1] 
                   * filter -> get(i + 1, j) );
-            output -> color[plane][row][col] = val;
-            val = output -> color[plane][row][col]
-              + (input -> color[plane][row + i + 1][col + j - 1] 
+            val += (input -> color[plane][row + i + 1][col + j - 1] 
                   * filter -> get(i + 2, j) );
+            //}
+            val += (input -> color[plane][row + i - 1][col + j] 
+                  * filter -> get(i, j + 1) );
+            val += (input -> color[plane][row + i][col + j] 
+                  * filter -> get(i + 1, j + 1) );
+            val += (input -> color[plane][row + i + 1][col + j] 
+                  * filter -> get(i + 2, j + 1) );
+
+            val += (input -> color[plane][row + i - 1][col + j + 1] 
+                  * filter -> get(i, j + 2) );
+            val += (input -> color[plane][row + i][col + j + 1] 
+                  * filter -> get(i + 1, j + 2) );
+            val += (input -> color[plane][row + i + 1][col + j + 1] 
+                  * filter -> get(i + 2, j + 2) );
+
             output -> color[plane][row][col] = val;
-          //}
-        }
+        //}
         //if divisor is one then dont do the division by the divisor
         //also move filter -> getDivisor out of loops
         if(divisor != 1)
