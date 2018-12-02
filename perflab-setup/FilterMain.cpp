@@ -148,16 +148,19 @@ applyFilter(struct Filter *filter, cs1300bmp *input, cs1300bmp *output)
   output -> height = input -> height;
 
   int divisor = filter -> getDivisor();
-
+  int width = (input -> width) - 1;
+  int height = (input -> height) - 1;
+  int t = 0;
+  
   //call input -> width and input -> height once
-  for(int col = 1; col < (input -> width) - 1; col = col + 1) 
+  for(int col = 1; col < width; col = col + 1) 
   {
-    for(int row = 1; row < (input -> height) - 1 ; row = row + 1) 
+    for(int row = 1; row < height; row = row + 1) 
     {
       for(int plane = 0; plane < 3; plane++) 
       {
         //move to outside loop
-        int t = 0;
+        //int t = 0;
         output -> color[plane][row][col] = 0;
         //change get_size to actual size of filter, they should all be same
         //unroll for loops below?
@@ -175,19 +178,20 @@ applyFilter(struct Filter *filter, cs1300bmp *input, cs1300bmp *output)
         //also move filter -> getDivisor out of loops
         if(divisor != 1)
         {
-        output -> color[plane][row][col] = 	
-          output -> color[plane][row][col] / divisor;
+          output -> color[plane][row][col] = 	
+            output -> color[plane][row][col] / divisor;
         }
         else
         {
-        output -> color[plane][row][col] = 	
-          output -> color[plane][row][col];
+          output -> color[plane][row][col] = 	
+            output -> color[plane][row][col];
         }
         if ( output -> color[plane][row][col]  < 0 ) 
         {
           output -> color[plane][row][col] = 0;
         }
-        if ( output -> color[plane][row][col]  > 255 ) 
+        //change to else if?
+        else if ( output -> color[plane][row][col]  > 255 ) 
         { 
           output -> color[plane][row][col] = 255;
         }
