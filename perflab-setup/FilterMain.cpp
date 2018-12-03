@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdint.h>
 #include <fstream>
+#include <omp.h>
 #include "Filter.h"
 
 using namespace std;
@@ -152,6 +153,7 @@ applyFilter(struct Filter *filter, cs1300bmp *input, cs1300bmp *output)
   int height = (input -> height) - 1;
   int t = 0;
   
+  #pragma omp parallel for reduction(+:val)
   //call input -> width and input -> height once
   for(int col = 1; col < width; col = col + 1) 
   {
@@ -171,6 +173,7 @@ applyFilter(struct Filter *filter, cs1300bmp *input, cs1300bmp *output)
         //{
           //for (int i = 0; i < 3; i++) 
           //{	
+            {
             int j = 0;
             int i = 0;
             //int val = output -> color[plane][row][col];
@@ -197,7 +200,7 @@ applyFilter(struct Filter *filter, cs1300bmp *input, cs1300bmp *output)
                   * filter -> get(i + 2, j + 2) );
 
             output -> color[plane][row][col] = val;
-        //}
+            }
         //if divisor is one then dont do the division by the divisor
         //also move filter -> getDivisor out of loops
         if(divisor != 1)
